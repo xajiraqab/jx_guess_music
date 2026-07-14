@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess Music</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <button id="backButton" class="site-header-brand" type="button" aria-label="Go to categories" title="Go to categories">
+        <span class="site-header-icon">♫</span>
+        <span class="site-header-text">Guess Music</span>
+      </button>
+
+      <a class="header-social-link" href="#" aria-label="GitHub" title="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2.1c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 .1 2.1-.8 2.6-1.2.1-.8.4-1.4.7-1.7-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11.1 11.1 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.3.7 1 .7 2v2.9c0 .4.2.7.8.6A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+        </svg>
+      </a>
+    </header>
+
+    <main class="app-shell">
+      <section id="selectionSection" class="hero-card selection-card">
+        <div class="selection-hero">
+          <h1>Guess the song</h1>
+          <p class="intro">Choose a category and start guessing</p>
+        </div>
+
+        <div class="category-section">
+          <div id="categoryButtons" class="category-buttons"></div>
+          <div class="custom-category-row">
+            <input id="customCategoryInput" class="custom-category-input" type="text" placeholder="Custom category" />
+            <button id="customCategoryButton" class="custom-category-button" type="button">Go</button>
+          </div>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+      </section>
+
+      <section id="gameSection" class="game-card hidden">
+        <div id="loadingOverlay" class="loading-overlay hidden">
+          <div class="loader-card">
+            <div class="spinner"></div>
+            <p>Loading songs...</p>
+          </div>
+        </div>
+
+        <div id="gameHeader" class="game-header hidden">
+          <div class="game-header-title">
+            <p class="eyebrow">Round</p>
+            <h2 id="roundLabel">0 / 10</h2>
+          </div>
+          <div class="game-header-score">
+            <p class="eyebrow">Score</p>
+            <h2 id="scoreLabel">0</h2>
+          </div>
+        </div>
+
+        <div id="gameStatusMessage" class="game-status-message hidden"></div>
+
+        <div id="gameContent" class="game-content hidden">
+          <div class="player-controls">
+            <button id="toggleButton" class="icon-button" aria-label="Play or pause preview">▶</button>
+            <button id="restartButton" class="icon-button" aria-label="Restart preview">↺</button>
+          </div>
+          <audio id="audioPlayer"></audio>
+
+          <div class="answers-panel">
+            <div id="answerButtons" class="answer-buttons"></div>
+          </div>
+
+          <div id="feedbackMessage" class="feedback-message" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <div id="feedbackDialog" class="feedback-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+        <div class="feedback-dialog-card">
+          <div id="feedbackEmoji" class="feedback-emoji">🎵</div>
+          <div id="feedbackLabel" class="feedback-label"></div>
+          <div id="correctSongInfo" class="correct-song-info"></div>
+          <button id="nextButton">Next</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
