@@ -117,6 +117,7 @@ function showSelectionScreen() {
   gameSection.classList.add('hidden');
   resetGameState();
   setStatus('');
+  history.replaceState(null, '', window.location.pathname);
 }
 
 function showGameError(message) {
@@ -208,6 +209,11 @@ function startFeedbackCountdown() {
 async function startGame(category) {
   resetGameState();
   lastCategory = category;
+  const urlParam = new URLSearchParams(window.location.search);
+  if (urlParam.get('category') !== category.label) {
+    const newUrl = `${window.location.pathname}?category=${encodeURIComponent(category.label)}`;
+    history.pushState({ category: category.label }, '', newUrl);
+  }
   selectionSection.classList.remove('hidden');
   gameSection.classList.add('hidden');
   resultsSection.classList.add('hidden');
@@ -542,3 +548,20 @@ function shuffleArray(values) {
 
   return copy;
 }
+
+(function initFromUrl() {
+  const param = new URLSearchParams(window.location.search).get('category');
+  if (!param) return;
+  const found = categories.find((c) => c.label === param);
+  startGame(found || { label: param, term: param });
+})();
+
+window.addEventListener('popstate', () => {
+  const param = new URLSearchParams(window.location.search).get('category');
+  if (!param) {
+    showSelectionScreen();
+    return;
+  }
+  const found = categories.find((c) => c.label === param);
+  startGame(found || { label: param, term: param });
+});
