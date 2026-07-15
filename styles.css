@@ -604,6 +604,19 @@ p {
   line-height: 1.1;
 }
 
+.results-category {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.35rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+}
+
 .results-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -40,7 +40,8 @@ const resultsSection = document.getElementById('resultsSection');
 const resultsEmoji = document.getElementById('resultsEmoji');
 const resultsScore = document.getElementById('resultsScore');
 const resultsCorrectCount = document.getElementById('resultsCorrectCount');
-const resultsIncorrectCount = document.getElementById('resultsIncorrectCount');
+  const resultsIncorrectCount = document.getElementById('resultsIncorrectCount');
+  const resultsCategory = document.getElementById('resultsCategory');
 const restartGameButton = document.getElementById('restartGameButton');
 const backToMenuButton = document.getElementById('backToMenuButton');
 const categoryBadge = document.getElementById('categoryBadge');
@@ -414,6 +415,13 @@ function finishGame() {
   resultsScore.textContent = `${score} / ${rounds.length}`;
   resultsCorrectCount.textContent = score;
   resultsIncorrectCount.textContent = incorrectCount;
+
+  if (lastCategory) {
+    resultsCategory.textContent = lastCategory.label;
+    resultsCategory.classList.remove('hidden');
+  } else {
+    resultsCategory.classList.add('hidden');
+  }
 
   gameHeader.classList.add('hidden');
   gameContent.classList.add('hidden');
