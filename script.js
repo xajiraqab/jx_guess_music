@@ -1,13 +1,13 @@
 const categories = [
-  { label: 'Movies', term: 'movie' },
-  { label: 'Games', term: 'game' },
-  { label: 'Anime', term: 'anime' },
+  { label: 'Pop', term: 'pop' },
   { label: 'Rock', term: 'rock' },
   { label: 'Jazz', term: 'jazz' },
   { label: 'Classical', term: 'classical' },
   { label: 'Hip Hop', term: 'hip hop' },
-  { label: 'Pop', term: 'pop' },
   { label: 'Disco', term: 'disco' },
+  { label: 'Movies', term: 'movie' },
+  { label: 'Games', term: 'game' },
+  { label: 'Anime', term: 'anime' },
   { label: 'Lo-fi', term: 'lofi' },
   { label: 'Country', term: 'country' },
   { label: 'Nina Chuba', term: 'nina chuba' },
@@ -41,7 +41,8 @@ const resultsEmoji = document.getElementById('resultsEmoji');
 const resultsScore = document.getElementById('resultsScore');
 const resultsCorrectCount = document.getElementById('resultsCorrectCount');
   const resultsIncorrectCount = document.getElementById('resultsIncorrectCount');
-  const resultsCategory = document.getElementById('resultsCategory');
+const resultsCategory = document.getElementById('resultsCategory');
+const resultsTime = document.getElementById('resultsTime');
 const restartGameButton = document.getElementById('restartGameButton');
 const backToMenuButton = document.getElementById('backToMenuButton');
 const categoryBadge = document.getElementById('categoryBadge');
@@ -56,6 +57,7 @@ let nextRoundTimer = null;
 let feedbackTimer = null;
 let feedbackCountdownValue = 3;
 let isAudioPlaying = false;
+let gameStartTime = null;
 
 function renderCategories() {
   const wrapper = categoryButtons.querySelector('.custom-category-wrapper');
@@ -110,6 +112,7 @@ function resetGameState() {
   audioPlayer.load();
   setPlaybackButtonState(false);
   stopVisualizer();
+  gameStartTime = null;
 }
 
 function showSelectionScreen() {
@@ -235,6 +238,7 @@ async function startGame(category) {
     gameSection.classList.remove('hidden');
     categoryBadge.textContent = lastCategory.label;
     categoryBadge.classList.remove('hidden');
+    gameStartTime = Date.now();
     showRound();
   } catch (error) {
     hideLoading();
@@ -315,9 +319,10 @@ function showRound() {
   gameContent.classList.remove('hidden');
   clearGameError();
 
-  currentQuestion.options.forEach((option) => {
+  currentQuestion.options.forEach((option, index) => {
     const button = document.createElement('button');
     button.innerHTML = `
+      <span class="answer-shortcut">${index + 1}</span>
       <img src="${option.artworkUrl60 || option.artworkUrl100 || ''}" alt="${option.trackName}" />
       <span>${option.trackName} — ${option.artistName}</span>
     `;
@@ -422,6 +427,16 @@ function finishGame() {
   resultsCorrectCount.textContent = score;
   resultsIncorrectCount.textContent = incorrectCount;
 
+  if (gameStartTime) {
+    const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    resultsTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    resultsTime.classList.remove('hidden');
+  } else {
+    resultsTime.classList.add('hidden');
+  }
+
   if (lastCategory) {
     resultsCategory.textContent = lastCategory.label;
     resultsCategory.classList.remove('hidden');
@@ -462,6 +477,50 @@ restartGameButton.addEventListener('click', () => {
 
 backToMenuButton.addEventListener('click', () => {
   showSelectionScreen();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+    return;
+  }
+
+  if (gameSection.classList.contains('hidden')) {
+    return;
+  }
+
+  const key = event.key;
+
+  if (['1', '2', '3', '4'].includes(key)) {
+    if (!feedbackDialog.classList.contains('hidden')) {
+      return;
+    }
+    const buttons = Array.from(answerButtons.querySelectorAll('button:not([disabled])'));
+    const index = parseInt(key) - 1;
+    if (index < buttons.length) {
+      buttons[index].click();
+    }
+    return;
+  }
+
+  if (key === ' ') {
+    event.preventDefault();
+    if (!feedbackDialog.classList.contains('hidden')) {
+      return;
+    }
+    togglePlayback();
+    return;
+  }
+
+  if (key === 'Enter') {
+    if (!feedbackDialog.classList.contains('hidden')) {
+      event.preventDefault();
+      clearInterval(feedbackTimer);
+      hideFeedbackDialog();
+      currentRoundIndex += 1;
+      showRound();
+    }
+    return;
+  }
 });
 
 audioPlayer.addEventListener('play', () => {
