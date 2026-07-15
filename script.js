@@ -11,6 +11,7 @@ const categories = [
   { label: 'Lo-fi', term: 'lofi' },
   { label: 'Country', term: 'country' },
   { label: 'Nina Chuba', term: 'nina chuba' },
+  { label: 'ქართულები', term: 'georgian music' },
 ];
 
 const categoryButtons = document.getElementById('categoryButtons');
@@ -25,7 +26,6 @@ const answerButtons = document.getElementById('answerButtons');
 const gameHeader = document.getElementById('gameHeader');
 const gameContent = document.getElementById('gameContent');
 const gameStatusMessage = document.getElementById('gameStatusMessage');
-const feedbackMessage = document.getElementById('feedbackMessage');
 const feedbackDialog = document.getElementById('feedbackDialog');
 const feedbackEmoji = document.getElementById('feedbackEmoji');
 const feedbackLabel = document.getElementById('feedbackLabel');
@@ -36,11 +36,20 @@ const toggleButton = document.getElementById('toggleButton');
 const restartButton = document.getElementById('restartButton');
 const backButton = document.getElementById('backButton');
 const audioPlayer = document.getElementById('audioPlayer');
+const resultsSection = document.getElementById('resultsSection');
+const resultsEmoji = document.getElementById('resultsEmoji');
+const resultsScore = document.getElementById('resultsScore');
+const resultsCorrectCount = document.getElementById('resultsCorrectCount');
+const resultsIncorrectCount = document.getElementById('resultsIncorrectCount');
+const restartGameButton = document.getElementById('restartGameButton');
+const backToMenuButton = document.getElementById('backToMenuButton');
+const categoryBadge = document.getElementById('categoryBadge');
 
 let songs = [];
 let rounds = [];
 let currentRoundIndex = 0;
 let score = 0;
+let lastCategory = null;
 let currentQuestion = null;
 let nextRoundTimer = null;
 let feedbackTimer = null;
@@ -48,18 +57,31 @@ let feedbackCountdownValue = 3;
 let isAudioPlaying = false;
 
 function renderCategories() {
-  categoryButtons.innerHTML = '';
+  const wrapper = categoryButtons.querySelector('.custom-category-wrapper');
+
+  categoryButtons.querySelectorAll('button:not(.custom-category-button)').forEach((btn) => btn.remove());
 
   categories.forEach((category) => {
     const button = document.createElement('button');
     button.textContent = category.label;
     button.addEventListener('click', () => startGame(category));
-    categoryButtons.appendChild(button);
+    categoryButtons.insertBefore(button, wrapper);
   });
 }
 
 function setStatus(text) {
   statusMessage.textContent = text;
+  statusMessage.classList.remove('status-error');
+}
+
+function showError(text) {
+  statusMessage.textContent = text;
+  statusMessage.classList.add('status-error');
+}
+
+function hideError() {
+  statusMessage.textContent = '';
+  statusMessage.classList.remove('status-error');
 }
 
 function resetGameState() {
@@ -72,7 +94,6 @@ function resetGameState() {
   currentQuestion = null;
   scoreLabel.textContent = '0';
   roundLabel.textContent = '0 / 10';
-  feedbackMessage.textContent = '';
   hideFeedbackDialog();
   answerButtons.innerHTML = '';
   gameHeader.classList.add('hidden');
@@ -81,10 +102,13 @@ function resetGameState() {
   gameStatusMessage.textContent = '';
   gameSection.classList.add('hidden');
   selectionSection.classList.remove('hidden');
+  resultsSection.classList.add('hidden');
+  categoryBadge.classList.add('hidden');
   audioPlayer.pause();
   audioPlayer.src = '';
   audioPlayer.load();
   setPlaybackButtonState(false);
+  stopVisualizer();
 }
 
 function showSelectionScreen() {
@@ -118,9 +142,6 @@ function handleCustomCategory() {
 
 function showLoading() {
   loadingOverlay.classList.remove('hidden');
-  gameHeader.classList.add('hidden');
-  gameContent.classList.add('hidden');
-  gameStatusMessage.classList.add('hidden');
 }
 
 function hideLoading() {
@@ -129,7 +150,7 @@ function hideLoading() {
 
 function setPlaybackButtonState(isPlaying) {
   isAudioPlaying = isPlaying;
-  toggleButton.textContent = isPlaying ? '⏸' : '▶';
+  toggleButton.querySelector('.btn-icon').textContent = isPlaying ? '⏸' : '▶';
   toggleButton.classList.toggle('is-playing', isPlaying);
 }
 
@@ -185,17 +206,19 @@ function startFeedbackCountdown() {
 
 async function startGame(category) {
   resetGameState();
+  lastCategory = category;
   selectionSection.classList.remove('hidden');
   gameSection.classList.add('hidden');
+  resultsSection.classList.add('hidden');
   showLoading();
-  setStatus(`Loading ${category.label} songs...`);
+  hideError();
 
   try {
     songs = await fetchSongs(category.term);
     hideLoading();
 
     if (songs.length < 3) {
-      setStatus('Songs not found.');
+      showError('Songs not found.');
       return;
     }
 
@@ -203,11 +226,13 @@ async function startGame(category) {
     rounds = buildRounds(songs, 10);
     selectionSection.classList.add('hidden');
     gameSection.classList.remove('hidden');
+    categoryBadge.textContent = lastCategory.label;
+    categoryBadge.classList.remove('hidden');
     showRound();
   } catch (error) {
     hideLoading();
     console.error(error);
-    setStatus('Songs not found.');
+    showError('Failed to load songs. Please try again.');
   }
 }
 
@@ -251,11 +276,14 @@ async function fetchSongs(term) {
 
 function buildRounds(allSongs, count) {
   const correctSongs = shuffleArray([...allSongs]).slice(0, count);
+  const usedIds = new Set(correctSongs.map((s) => s.trackId));
 
   return correctSongs.map((correctSong) => {
     const wrongChoices = shuffleArray(
-      allSongs.filter((song) => song.trackId !== correctSong.trackId)
-    ).slice(0, 2);
+      allSongs.filter((song) => !usedIds.has(song.trackId))
+    ).slice(0, 3);
+
+    wrongChoices.forEach((s) => usedIds.add(s.trackId));
 
     const options = shuffleArray([correctSong, ...wrongChoices]);
 
@@ -275,7 +303,6 @@ function showRound() {
   currentQuestion = rounds[currentRoundIndex];
   roundLabel.textContent = `${currentRoundIndex + 1} / ${rounds.length}`;
   scoreLabel.textContent = score.toString();
-  feedbackMessage.textContent = '';
   answerButtons.innerHTML = '';
   gameHeader.classList.remove('hidden');
   gameContent.classList.remove('hidden');
@@ -358,10 +385,8 @@ function handleAnswer(selectedOption) {
   if (isCorrect) {
     score += 1;
     scoreLabel.textContent = score.toString();
-    feedbackMessage.textContent = 'Correct!';
     showFeedbackDialog(true);
   } else {
-    feedbackMessage.textContent = 'Not quite.';
     showFeedbackDialog(false);
   }
 
@@ -370,11 +395,30 @@ function handleAnswer(selectedOption) {
 }
 
 function finishGame() {
-  feedbackMessage.textContent = `Final score: ${score} / ${rounds.length}`;
-  answerButtons.innerHTML = '';
-  toggleButton.disabled = true;
-  restartButton.disabled = true;
-  setStatus('Choose another category to play again.');
+  audioPlayer.pause();
+  setPlaybackButtonState(false);
+  stopVisualizer();
+
+  const incorrectCount = rounds.length - score;
+
+  if (score === rounds.length) {
+    resultsEmoji.textContent = '🏆';
+  } else if (score >= rounds.length * 0.7) {
+    resultsEmoji.textContent = '🎉';
+  } else if (score >= rounds.length * 0.4) {
+    resultsEmoji.textContent = '🎵';
+  } else {
+    resultsEmoji.textContent = '💔';
+  }
+
+  resultsScore.textContent = `${score} / ${rounds.length}`;
+  resultsCorrectCount.textContent = score;
+  resultsIncorrectCount.textContent = incorrectCount;
+
+  gameHeader.classList.add('hidden');
+  gameContent.classList.add('hidden');
+  gameSection.classList.add('hidden');
+  resultsSection.classList.remove('hidden');
 }
 
 toggleButton.addEventListener('click', togglePlayback);
@@ -394,11 +438,91 @@ nextButton.addEventListener('click', () => {
   showRound();
 });
 
-audioPlayer.addEventListener('play', () => setPlaybackButtonState(true));
-audioPlayer.addEventListener('pause', () => setPlaybackButtonState(false));
-audioPlayer.addEventListener('ended', () => setPlaybackButtonState(false));
+restartGameButton.addEventListener('click', () => {
+  if (lastCategory) {
+    startGame(lastCategory);
+  } else {
+    showSelectionScreen();
+  }
+});
+
+backToMenuButton.addEventListener('click', () => {
+  showSelectionScreen();
+});
+
+audioPlayer.addEventListener('play', () => {
+  setPlaybackButtonState(true);
+  startVisualizer();
+});
+audioPlayer.addEventListener('pause', () => {
+  setPlaybackButtonState(false);
+  stopVisualizer();
+});
+audioPlayer.addEventListener('ended', () => {
+  setPlaybackButtonState(false);
+  stopVisualizer();
+});
 setPlaybackButtonState(false);
 renderCategories();
+
+const visualizerEl = document.querySelector('#toggleButton .btn-bars');
+const BAR_COUNT = 10;
+const bars = [];
+
+for (let i = 0; i < BAR_COUNT; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  bar.style.height = '4px';
+  visualizerEl.appendChild(bar);
+  bars.push(bar);
+}
+
+let audioCtx = null;
+let analyser = null;
+let animFrameId = null;
+let dataArray = null;
+
+function initAudioContext() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 64;
+  const source = audioCtx.createMediaElementSource(audioPlayer);
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function startVisualizer() {
+  initAudioContext();
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  drawBars();
+}
+
+function stopVisualizer() {
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+  bars.forEach((bar) => {
+    bar.style.height = '4px';
+  });
+}
+
+function drawBars() {
+  analyser.getByteFrequencyData(dataArray);
+  const step = Math.floor(dataArray.length / BAR_COUNT);
+
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const value = dataArray[i * step];
+    const height = Math.max(4, (value / 255) * 60);
+    bars[i].style.height = height + 'px';
+  }
+
+  animFrameId = requestAnimationFrame(drawBars);
+}
 
 function shuffleArray(values) {
   const copy = [...values];

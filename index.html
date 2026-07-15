@@ -22,16 +22,21 @@
 
     <main class="app-shell">
       <section id="selectionSection" class="hero-card selection-card">
+        <div id="loadingOverlay" class="loading-overlay hidden">
+          <div class="spinner"></div>
+        </div>
+
         <div class="selection-hero">
           <h1>Guess the song</h1>
           <p class="intro">Choose a category and start guessing</p>
         </div>
 
         <div class="category-section">
-          <div id="categoryButtons" class="category-buttons"></div>
-          <div class="custom-category-row">
-            <input id="customCategoryInput" class="custom-category-input" type="text" placeholder="Custom category" />
-            <button id="customCategoryButton" class="custom-category-button" type="button">Go</button>
+          <div id="categoryButtons" class="category-buttons">
+            <div class="custom-category-wrapper">
+              <input id="customCategoryInput" class="custom-category-input" type="text" placeholder="Custom category" />
+              <button id="customCategoryButton" class="custom-category-button" type="button">Go</button>
+            </div>
           </div>
         </div>
 
@@ -39,13 +44,6 @@
       </section>
 
       <section id="gameSection" class="game-card hidden">
-        <div id="loadingOverlay" class="loading-overlay hidden">
-          <div class="loader-card">
-            <div class="spinner"></div>
-            <p>Loading songs...</p>
-          </div>
-        </div>
-
         <div id="gameHeader" class="game-header hidden">
           <div class="game-header-title">
             <p class="eyebrow">Round</p>
@@ -55,22 +53,27 @@
             <p class="eyebrow">Score</p>
             <h2 id="scoreLabel">0</h2>
           </div>
+          <div class="game-header-category">
+            <p class="eyebrow">Category</p>
+            <div id="categoryBadge" class="game-category-badge hidden"></div>
+          </div>
         </div>
 
         <div id="gameStatusMessage" class="game-status-message hidden"></div>
 
         <div id="gameContent" class="game-content hidden">
           <div class="player-controls">
-            <button id="toggleButton" class="icon-button" aria-label="Play or pause preview">▶</button>
+            <button id="toggleButton" class="icon-button" aria-label="Play or pause preview">
+              <div class="btn-bars"></div>
+              <span class="btn-icon">▶</span>
+            </button>
             <button id="restartButton" class="icon-button" aria-label="Restart preview">↺</button>
           </div>
-          <audio id="audioPlayer"></audio>
+          <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
           <div class="answers-panel">
             <div id="answerButtons" class="answer-buttons"></div>
           </div>
-
-          <div id="feedbackMessage" class="feedback-message" aria-live="polite"></div>
         </div>
       </section>
 
@@ -82,6 +85,29 @@
           <button id="nextButton">Next</button>
         </div>
       </div>
+
+      <section id="resultsSection" class="results-section hidden">
+        <div class="results-hero">
+          <div id="resultsEmoji" class="results-emoji">🎵</div>
+          <h1>Game Over</h1>
+          <p class="results-score-label">Your Score</p>
+          <div id="resultsScore" class="results-score">0 / 10</div>
+        </div>
+        <div class="results-stats">
+          <div class="results-stat-card results-stat-correct">
+            <div id="resultsCorrectCount" class="results-stat-number">0</div>
+            <div class="results-stat-label">Correct</div>
+          </div>
+          <div class="results-stat-card results-stat-incorrect">
+            <div id="resultsIncorrectCount" class="results-stat-number">0</div>
+            <div class="results-stat-label">Incorrect</div>
+          </div>
+        </div>
+        <div class="results-actions">
+          <button id="restartGameButton" class="results-action-button results-restart-button">Play Again</button>
+          <button id="backToMenuButton" class="results-action-button results-menu-button">Main Menu</button>
+        </div>
+      </section>
     </main>
 
     <script src="script.js"></script>
