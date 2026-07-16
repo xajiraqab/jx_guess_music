@@ -490,6 +490,10 @@ document.addEventListener('keydown', (event) => {
 
   const key = event.key;
 
+  if (event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) {
+    return;
+  }
+
   if (['1', '2', '3', '4'].includes(key)) {
     if (!feedbackDialog.classList.contains('hidden')) {
       return;
